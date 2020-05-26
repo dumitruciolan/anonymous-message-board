@@ -10,6 +10,13 @@ const apiRoutes = require("./routes/api.js"),
   fccTestingRoutes = require("./routes/fcctesting.js"),
   runner = require("./test-runner");
 
+// user stories 1, 2 and 3
+const helmet = require("helmet");
+app.use(helmet.referrerPolicy({ policy: "same-origin" }));
+app.use(helmet());
+
+require('./controllers/database')
+
 app.use("/public", express.static(process.cwd() + "/public"));
 app.use(cors({ origin: "*" })); //For FCC testing purposes only
 
@@ -33,7 +40,8 @@ app
 //For FCC testing purposes
 fccTestingRoutes(app);
 //Routing for API
-apiRoutes(app);
+app.use('/api/', apiRoutes)
+// apiRoutes(app);
 
 //404 Not Found Middleware
 app.use((req, res, next) => {
