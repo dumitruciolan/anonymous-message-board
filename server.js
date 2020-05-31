@@ -2,11 +2,12 @@
 
 const express = require("express"),
   bodyParser = require("body-parser"),
-  { expect } = require("chai"),
+  // { expect } = require("chai"),
   cors = require("cors"),
   app = express();
 
 const apiRoutes = require("./routes/api.js"),
+  { handleError } = require("./helpers/error"),
   fccTestingRoutes = require("./routes/fcctesting.js"),
   runner = require("./test-runner");
 
@@ -15,7 +16,7 @@ const helmet = require("helmet");
 app.use(helmet.referrerPolicy({ policy: "same-origin" }));
 app.use(helmet());
 
-require('./controllers/database')
+require("./models/boardModel");
 
 app.use("/public", express.static(process.cwd() + "/public"));
 app.use(cors({ origin: "*" })); //For FCC testing purposes only
@@ -23,33 +24,35 @@ app.use(cors({ origin: "*" })); //For FCC testing purposes only
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-//Sample front-end
+// Sample front-end
 app
   .route("/b/:board/")
-  .get((req, res) => res.sendFile(process.cwd() + "/views/board.html"));
+  .get((_, res) => res.sendFile(process.cwd() + "/views/board.html"));
 
 app
   .route("/b/:board/:threadid")
-  .get((req, res) => res.sendFile(process.cwd() + "/views/thread.html"));
+  .get((_, res) => res.sendFile(process.cwd() + "/views/thread.html"));
 
-//Index page (static HTML)
+// Index page (static HTML)
 app
   .route("/")
-  .get((req, res) => res.sendFile(process.cwd() + "/views/index.html"));
+  .get((_, res) => res.sendFile(process.cwd() + "/views/index.html"));
 
-//For FCC testing purposes
+// For FCC testing purposes
 fccTestingRoutes(app);
-//Routing for API
-app.use('/api/', apiRoutes)
-// apiRoutes(app);
+// Routing for API
+app.use("/api/", apiRoutes);
 
-//404 Not Found Middleware
-app.use((req, res, next) => {
+// 404 Not Found Middleware
+app.use((_, res) =>
   res
     .status(404)
     .type("text")
-    .send("Not Found");
-});
+    .send("Not Found")
+);
+
+// Error Handling Middleware
+app.use((err, req, res, next) => handleError(err, res));
 
 //Start our server and tests!
 app.listen(process.env.PORT || 3000, () => {

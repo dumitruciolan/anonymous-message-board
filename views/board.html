@@ -72,7 +72,7 @@
                 '<p class="id">id: ' + ele._id + " (" + ele.created_on + ")</p>"
               );
               thread.push(
-                '<form id="reportThread"><input type="hidden" name="report_id" value="' +
+                '<form id="reportThread"><input type="hidden" name="thread_id" value="' +
                   ele._id +
                   '"><input type="submit" value="Report"></form>'
               );
@@ -83,13 +83,13 @@
               );
               thread.push("<h3>" + ele.text + "</h3>");
               thread.push('</div><div class="replies">');
-              var hiddenCount = ele.replycount - 3;
+              var hiddenCount = ele.replyCount - 3;
               if (hiddenCount < 1) {
                 hiddenCount = 0;
               }
               thread.push(
                 "<h5>" +
-                  ele.replycount +
+                  ele.replyCount +
                   " replies total (" +
                   hiddenCount +
                   ' hidden)- <a href="' +

@@ -13,8 +13,18 @@ const ThreadSchema = new mongoose.Schema(
     reported: { type: Boolean, default: false },
     delete_password: { type: String, required: true }
   }
-  // { timestamps: { createdAt: "created_on", updatedAt: 'bumped_on' } }
 );
+
+ThreadSchema.set('toObject', {
+  virtuals: true,
+  transform: (doc, ret, options) => {
+    delete ret.board;
+    delete ret.delete_password;
+    delete ret.id;
+    delete ret.reported;
+    delete ret.__v;
+  },
+});
 
 // export model so we can access it from api.js
 module.exports = mongoose.model("Thread", ThreadSchema);
