@@ -1,16 +1,16 @@
-const mongoose = require("mongoose"),
-  Board = require("../models/boardModel");
+const Board = require("../models/boardModel");
 
 // create a board if we don't already have it
 const findOrCreateBoard = (name, callback) =>
+  // find the board in the database
   Board.findOne({ name }, (findError, foundBoard) => {
     if (findError) return callback(findError);
-    if (foundBoard) return callback(null, foundBoard);
+    else if (foundBoard) return callback(null, foundBoard);
 
-    return Board.create({ name }, (createError, createdBoard) => {
-      if (createError) return callback(createError, null);
-      return callback(null, createdBoard);
-    });
+    // create the board if not found
+    else return Board.create({ name }, (createError, createdBoard) =>
+      createError ? callback(createError, null) : callback(null, createdBoard)
+    );
   });
 
 module.exports = { findOrCreateBoard };

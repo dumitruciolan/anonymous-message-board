@@ -5,13 +5,13 @@ const server = require("../server"),
   chaiHttp = require("chai-http"),
   chai = require("chai"),
   { assert } = chai;
-
 chai.use(chaiHttp);
 
 suite("Functional Tests", () => {
   let thread1, thread2, reply1;
-  const threadPassword = "PleaseNoHax1!";
-  const replyPassword = "ForTheLichKing!";
+  const threadPassword = "threadPassword",
+    replyPassword = "replyPassword";
+
   suite("API ROUTING FOR /api/threads/:board", () => {
     suite("POST", () => {
       test("Post a new thread to a board", done => {
@@ -19,31 +19,31 @@ suite("Functional Tests", () => {
           .request(server)
           .post("/api/threads/test")
           .send({
-            text: "automation ftw",
+            text: "posting a new thread (thread1)",
             delete_password: threadPassword
           })
-          .end((err, res) => {
+          .end((_, res) => {
+            assert.equal(res.status, 200);
             assert.include(
               res.redirects[0],
               "/b/test",
               "should redirect to /b/test/."
             );
-            assert.equal(res.status, 200);
 
             chai
               .request(server)
               .post("/api/threads/test")
               .send({
-                text: "functional tests are great",
+                text: "posting a new thread (thread2)",
                 delete_password: threadPassword
               })
-              .end((err, res) => {
+              .end((_, res) => {
+                assert.equal(res.status, 200);
                 assert.include(
                   res.redirects[0],
                   "/b/test",
                   "should redirect to /b/test/."
                 );
-                assert.equal(res.status, 200);
                 done();
               });
           });
@@ -51,11 +51,11 @@ suite("Functional Tests", () => {
     });
 
     suite("GET", () => {
-      test("Get an array of the 10 most recent threads with max. 3 recent replies", done => {
+      test("Get an array with the 10 most recent threads (max. 3 recent replies)", done => {
         chai
           .request(server)
           .get("/api/threads/test")
-          .end((err, res) => {
+          .end((_, res) => {
             assert.equal(res.status, 200);
             assert.isArray(res.body);
             assert.property(res.body[0], "_id");
@@ -76,8 +76,8 @@ suite("Functional Tests", () => {
             assert.notProperty(res.body[1], "reported");
             assert.isArray(res.body[0].replies);
             assert.isArray(res.body[1].replies);
-            assert.equal(res.body[0].text, "functional tests are great");
-            assert.equal(res.body[1].text, "automation ftw");
+            assert.equal(res.body[0].text, "posting a new thread (thread1)");
+            assert.equal(res.body[1].text, "posting a new thread (thread2)");
             assert.equal(res.body[0].replyCount, res.body[0].replies.length);
             assert.equal(res.body[1].replyCount, res.body[1].replies.length);
             assert.equal(res.body[0].created_on, res.body[0].bumped_on);
@@ -95,7 +95,7 @@ suite("Functional Tests", () => {
           .request(server)
           .delete("/api/threads/test")
           .send({ thread_id: thread1._id, delete_password: threadPassword })
-          .end((err, res) => {
+          .end((_, res) => {
             assert.equal(res.status, 200);
             assert.equal(res.text, "success");
             done();
@@ -106,8 +106,8 @@ suite("Functional Tests", () => {
         chai
           .request(server)
           .delete("/api/threads/test")
-          .send({ thread_id: thread2._id, delete_password: "random" })
-          .end((err, res) => {
+          .send({ thread_id: thread2._id, delete_password: "wrongPassword" })
+          .end((_, res) => {
             assert.equal(res.status, 200);
             assert.equal(res.text, "incorrect password");
             done();
@@ -121,7 +121,7 @@ suite("Functional Tests", () => {
           .request(server)
           .put("/api/threads/test")
           .send({ thread_id: thread2._id })
-          .end((err, res) => {
+          .end((_, res) => {
             assert.equal(res.status, 200);
             assert.equal(res.text, "success");
             done();
@@ -137,12 +137,13 @@ suite("Functional Tests", () => {
           .request(server)
           .post("/api/replies/test")
           .send({
-            thread_id: thread2,
-            text: "they took our jobs",
+            thread_id: thread2._id,
+            text: "posting a new reply",
             delete_password: replyPassword
           })
-          .end((err, res) => {
+          .end((_, res) => {
             assert.equal(res.status, 200);
+            done();
           });
       });
 
@@ -152,7 +153,7 @@ suite("Functional Tests", () => {
             .request(server)
             .get("/api/replies/test")
             .query({ thread_id: thread2._id })
-            .end((err, res) => {
+            .end((_, res) => {
               assert.equal(res.status, 200);
               assert.property(res.body, "_id");
               assert.property(res.body, "text");
@@ -162,7 +163,7 @@ suite("Functional Tests", () => {
               assert.notProperty(res.body, "delete_password");
               assert.notProperty(res.body, "reported");
               assert.isArray(res.body.replies);
-              assert.equal(res.body.text, "automation ftw");
+              assert.equal(res.body.text, "posting a new thread (thread2)");
               reply1 = { ...res.body.replies[0] };
               done();
             });
@@ -175,7 +176,7 @@ suite("Functional Tests", () => {
             .request(server)
             .put("/api/replies/test")
             .send({ reply_id: reply1._id, thread_id: thread2._id })
-            .end((err, res) => {
+            .end((_, res) => {
               assert.equal(res.status, 200);
               assert.equal(res.text, "success");
               done();
@@ -188,28 +189,32 @@ suite("Functional Tests", () => {
           chai
             .request(server)
             .delete("/api/replies/test")
-            .send({ reply_id: reply1._id, thread_id: thread2._id, delete_password: replyPassword })
-            .end((err, res) => {
+            .send({
+              reply_id: reply1._id,
+              thread_id: thread2._id,
+              delete_password: replyPassword
+            })
+            .end((_, res) => {
               assert.equal(res.status, 200);
-              assert.equal(res.body.replies[0].text, "[deleted]");
+              assert.equal(res.text, "success");
               done();
             });
         });
       });
     });
 
-    // suite("CLEANUP AFTER TESTING", () => {
-    //   test("clean up the board after testing", done => {
-    //     chai
-    //       .request(server)
-    //       .delete("/api/threads/test")
-    //       .send({ thread_id: thread2._id, delete_password: threadPassword })
-    //       .end((err, res) => {
-    //         assert.equal(res.status, 200);
-    //         assert.equal(res.text, "success");
-    //         done();
-    //       });
-    //   });
-    // });
+    suite("CLEANUP THE BOARD AFTER TESTING", () => {
+      test("Delete the remaining test thread", done => {
+        chai
+          .request(server)
+          .delete("/api/threads/test")
+          .send({ thread_id: thread2._id, delete_password: threadPassword })
+          .end((_, res) => {
+            assert.equal(res.status, 200);
+            assert.equal(res.text, "success");
+            done();
+          });
+      });
+    });
   });
-})
+});

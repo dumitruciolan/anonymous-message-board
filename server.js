@@ -2,7 +2,6 @@
 
 const express = require("express"),
   bodyParser = require("body-parser"),
-  // { expect } = require("chai"),
   cors = require("cors"),
   app = express();
 
@@ -16,6 +15,7 @@ const helmet = require("helmet");
 app.use(helmet.referrerPolicy({ policy: "same-origin" }));
 app.use(helmet());
 
+// import the database models
 require("./models/boardModel");
 
 app.use("/public", express.static(process.cwd() + "/public"));
@@ -52,9 +52,9 @@ app.use((_, res) =>
 );
 
 // Error Handling Middleware
-app.use((err, req, res, next) => handleError(err, res));
+app.use((err, res) => handleError(err, res));
 
-//Start our server and tests!
+// Start our server and tests!
 app.listen(process.env.PORT || 3000, () => {
   console.log("Listening on port " + process.env.PORT);
   if (process.env.NODE_ENV === "test") {
@@ -66,8 +66,8 @@ app.listen(process.env.PORT || 3000, () => {
         console.log("Tests are not valid:");
         console.log(e);
       }
-    }, 1500);
+    }, 2000);
   }
 });
 
-module.exports = app; //for testing
+module.exports = app; // for testing
