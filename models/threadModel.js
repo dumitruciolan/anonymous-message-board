@@ -15,8 +15,11 @@ const ThreadSchema = new mongoose.Schema(
   }
 );
 
+// return a custom object
 ThreadSchema.set('toObject', {
+  // the changes are not persisted
   virtuals: true,
+  // remove the unwanted fields
   transform: (doc, ret, options) => {
     delete ret.board;
     delete ret.delete_password;
